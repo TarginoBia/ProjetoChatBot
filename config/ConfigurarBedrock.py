@@ -14,7 +14,7 @@ bedrock = boto3.client(
     aws_secret_access_key=AWS_SECRET_ACCESS_KEY
 )
 
-pdf_files = glob.glob("dataset/*.pdf")  # Busca todos os PDFs na pasta dataset
+pdf_files = glob.glob("dataset/*.pdf") 
 
 if not pdf_files:
     print("Nenhum arquivo PDF encontrado na pasta 'dataset'. Verifique o caminho e tente novamente.")
