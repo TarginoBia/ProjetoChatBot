@@ -1,11 +1,6 @@
 import os
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+import glob
 from langchain.document_loaders import PyPDFLoader
-from langchain.prompts import PromptTemplate
-from langchain.embeddings.bedrock import BedrockEmbeddings
-from langchain.llms.bedrock import Bedrock
-from langchain.vectorstores import Chroma
-from langchain.chains import RetrievalQA
 import boto3
 
 AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')
@@ -19,6 +14,10 @@ bedrock = boto3.client(
     aws_secret_access_key=AWS_SECRET_ACCESS_KEY
 )
 
+pdf_files = glob.glob("dataset/*.pdf")  # Busca todos os PDFs na pasta dataset
 
-loaders = [PyPDFLoader("bedrock-ug.pdf"),]
-
+if not pdf_files:
+    print("Nenhum arquivo PDF encontrado na pasta 'dataset'. Verifique o caminho e tente novamente.")
+else:
+    loaders = [PyPDFLoader(file) for file in pdf_files]
+    print(f"{len(loaders)} arquivos PDF carregados com sucesso!")
