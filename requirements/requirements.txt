@@ -1,6 +1,0 @@
-langchain
-langchain-community
-boto3
-chromadb
-pypdf
-python-telegram-bot
