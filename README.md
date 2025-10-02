@@ -1,39 +1,87 @@
-# ProjetoChatBot
-Um chatbot para consulta de documentos jurídicos utilizando AWS Bedrock, LangChain e Chroma, com interface via Telegram. Este projeto implementa um sistema de RAG para responder perguntas com base em documentos jurídicos armazenados em um bucket S3, executado em uma instância EC2, com logs registrados no CloudWatch.
+# Projeto 4 – Chatbot Jurídico com RAG e AWS Bedrock  
+**Sprint 7 e 8 – Scholarship Compass UOL – Formação em Inteligência Artificial para AWS**
 
-Funcionalidades:
+## 📌 Visão Geral
+Este projeto consiste na implementação de um **chatbot jurídico** utilizando a arquitetura **RAG (Retrieval-Augmented Generation)**.  
+O sistema realiza consultas em uma base de documentos jurídicos armazenada no **Amazon S3**, gera embeddings com **Amazon Bedrock**, indexa com **ChromaDB** e expõe a interface de interação via **Telegram**.  
 
-  -Carrega documentos do dataset para um bucket S3.
-  
-  -Gera embeddings com Bedrock e indexa com Chroma.
-  
-  -Responde consultas jurídicas via Telegram.
-  
-  -Logs e monitoramento com CloudWatch.
+Toda a orquestração do fluxo é feita a partir de uma **instância EC2**, sendo acionada por um **Lambda** que recebe gatilhos do **API Gateway**, com monitoramento de logs via **Amazon CloudWatch**.  
 
-Arquitetura:
+---
 
-  -Instância EC2: gerencia o processamento e execução do chatbot.
-  
-  -S3 Bucket: armazena os documentos do dataset.
-  
-  -Bedrock: gera embeddings e atua como mecanismo de retrieval.
-  
-  -Chroma: indexa embeddings para consultas rápidas.
-  
-  -Telegram Bot: interface de usuário para interação.
+## 🏗️ Arquitetura
+Fluxo principal:
+1. Usuários enviam mensagens ao chatbot pelo **Telegram**.  
+2. O **API Gateway** recebe a requisição.  
+3. O **Lambda** é acionado e redireciona a requisição para a aplicação rodando em uma **instância EC2**.  
+4. A aplicação na **EC2** rodando em docker, utilizando **LangChain**, realiza:  
+   - Leitura de documentos jurídicos armazenados no **S3 (dataset jurídico)**;  
+   - Criação de embeddings utilizando **Amazon Bedrock**;  
+   - Indexação dos embeddings no **ChromaDB** para recuperação eficiente;  
+   - Execução do mecanismo de **RAG** (busca + geração de resposta).  
+5. A resposta é enviada de volta ao usuário via **Telegram**.  
+6. Logs e eventos são registrados no **Amazon CloudWatch**.  
 
-  -CloudWatch: grava logs de processamento de dados.
+---
 
-Como usar:
+## ⚙️ Tecnologias Utilizadas
+- **AWS**
+  - Amazon S3 → armazenamento dos documentos jurídicos  
+  - Amazon Bedrock → geração de embeddings e consultas  
+  - Amazon EC2 → execução da aplicação  
+  - Amazon API Gateway → exposição da API para o Telegram  
+  - AWS Lambda → intermediação entre API Gateway e EC2  
+  - Amazon CloudWatch → monitoramento e logging  
 
-  1.Configure o bucket S3 e faça upload dos documentos.
+- **Frameworks/Bibliotecas**
+  - Python 3.x  
+  - [LangChain](https://python.langchain.com/) → orquestração do RAG  
+  - [LangChain AWS](https://pypi.org/project/langchain-aws/) → integração com Bedrock  
+  - [LangChain Community](https://pypi.org/project/langchain-community/) → loaders e utilidades  
+  - [ChromaDB](https://www.trychroma.com/) → armazenamento vetorial  
+  - [unstructured](https://unstructured-io.github.io/unstructured/) → processamento de PDFs  
+  - PyPDFLoader (LangChain) → carregamento de documentos PDF  
+  - [FastAPI](https://fastapi.tiangolo.com/) → criação da API  
+  - [Uvicorn](https://www.uvicorn.org/) → servidor ASGI  
+  - [python-telegram-bot](https://github.com/python-telegram-bot/python-telegram-bot) → integração com Telegram  
+  - [boto3](https://boto3.amazonaws.com/v1/documentation/api/latest/index.html) → SDK AWS  
 
-  2.Prepare uma instância EC2 com acesso a S3, Bedrock e CloudWatch.
+---
 
-  3.Instale dependências:
-    3.1pip install -r requirements.txt
-  4.Configure variáveis de ambiente da AWS e Telegram Bot.
-  5.Execute o chatbot:
-    5.1 python src/main.py
+## 📂 Estrutura de Pastas
+```bash
+📦 projeto-chatbot
+ ┣ 📂 src/
+ ┃ ┣ 📂 indexing/    # carregamento de dados, geração de embeddings e armazenamento (ChromaDB)
+ ┃ ┣ 📂 llm/         # acesso ao LLM
+ ┃ ┣ 📂 rag/         # consultas e RAG com LangChain
+ ┃ ┣ main.py
+ ┣ Dockerfile
+ ┣ README.md
+ ┣ testes.txt
+ ┗ requirements.txt
 
+ ## Testes BDD (exemplos)
+
+```gherkin
+Feature: Geração de respostas com IA generativa via AWS Bedrock
+
+  Scenario: Usuário faz uma pergunta simples e recebe resposta
+    Given que o sistema está em execução
+    When o usuário envia a pergunta "Qual a capital da França?"
+    Then o sistema deve retornar uma resposta contendo "Paris"
+
+  Scenario: Usuário faz uma pergunta baseada em documentos indexados
+    Given que documentos foram carregados e indexados no vetor store
+    When o usuário pergunta "Qual o valor da dívida discutida no processo?"
+    Then a resposta deve usar informações recuperadas dos documentos
+
+  Scenario: Indexação de novo documento
+    Given que um novo documento "manual.pdf" foi carregado
+    When o sistema processar a indexação
+    Then o documento deve estar acessível para futuras consultas
+
+  Scenario: Consulta com contexto não encontrado
+    Given que nenhum documento contém informações sobre "foguetes espaciais"
+    When o usuário pergunta "Qual o combustível do foguete?"
+    Then o sistema deve retornar uma resposta genérica indicando não ter conhecimento sobre o assunto
